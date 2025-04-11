@@ -188,7 +188,7 @@ const About = () => {
           </p>
           <b className="text-gray-800">Our Vision</b>
           <p>
-            Our vision at Prescripto is to create a seamless healthcare experience for every user. We aim to bridge the
+            Our vision at PhysioCare is to create a seamless healthcare experience for every user. We aim to bridge the
             gap between patients and healthcare providers, making it easier for you to access the care you need, when
             you need it.
           </p>

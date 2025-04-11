@@ -516,7 +516,7 @@ const Chatbot = ({ isVisible, onClose }) => {
     // Expanded list of topics, greetings, farewells
     const allowedTopics = [
       "health", "physiotherapy", "balanced diet", "exercise", "therapy",
-      "injury", "rehabilitation", "posture", "doctor", "consultation",
+      "injury", "rehabilitation", "posture", "doctor", "consultation","Pain"
     ];
     const greetings = ["hi", "hey", "hello", "good morning", "good afternoon", "good evening", "hii", "hiii", "hoy"];
     const farewells = ["bye", "goodbye", "see you", "talk to you later", "bye bye", "good bye", "see ya"];

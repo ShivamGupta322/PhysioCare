@@ -170,3 +170,129 @@ export const Welcome_Email_Template = `
   </body>
   </html>
 `;
+
+
+
+
+//Apointment confirmation-
+export const Appointment_Confirmation_Template = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Appointment Confirmation</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0;
+              background-color: #f0f9ff;
+              color: #333;
+          }
+          .container {
+              max-width: 600px;
+              margin: 30px auto;
+              background: #ffffff;
+              border-radius: 10px;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+              overflow: hidden;
+              border: 1px solid #ddd;
+          }
+          .header {
+              background-color: #4a90e2;
+              color: white;
+              padding: 20px;
+              text-align: center;
+              font-size: 28px;
+              font-weight: bold;
+          }
+          .content {
+              padding: 25px;
+              color: #333;
+              line-height: 1.8;
+          }
+          .appointment-details {
+              background-color: #f9f9f9;
+              padding: 15px;
+              border-radius: 5px;
+              margin: 15px 0;
+          }
+          .video-button {
+              display: inline-block;
+              background-color: #4CAF50;
+              color: white;
+              padding: 12px 25px;
+              text-decoration: none;
+              border-radius: 4px;
+              font-weight: bold;
+              margin: 15px 0;
+          }
+          .video-link {
+              word-break: break-all;
+              color: #4a90e2;
+              font-size: 12px;
+          }
+          .preparation {
+              background-color: #f5f5f5;
+              padding: 15px;
+              border-radius: 5px;
+              margin: 20px 0;
+          }
+          .preparation ul {
+              padding-left: 20px;
+              color: #555;
+          }
+          .footer {
+              background-color: #f9f9f9;
+              padding: 15px;
+              text-align: center;
+              color: #555;
+              font-size: 12px;
+              border-top: 1px solid #ddd;
+          }
+          p {
+              margin: 0 0 15px;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <div class="header">PhysioCare</div>
+          <div class="content">
+              <p>Hello {patientName},</p>
+              <p>Your appointment has been successfully booked with <strong>{doctorName}</strong>.</p>
+              
+              <div class="appointment-details">
+                  <p><strong>Date:</strong> {appointmentDate}</p>
+                  <p><strong>Time:</strong> {appointmentTime}</p>
+              </div>
+              
+              <div style="text-align: center; margin: 25px 0;">
+                  <p style="margin-bottom: 15px;"><strong>Join your video consultation at the scheduled time:</strong></p>
+                  <a href="{videoCallLink}" class="video-button">Join Video Call</a>
+                  <p style="margin-top: 10px;">Or copy this link: <a href="{videoCallLink}" class="video-link">{videoCallLink}</a></p>
+              </div>
+              
+              <p>Please join the video call 5 minutes before your scheduled appointment time.</p>
+              <p>If you need to reschedule or cancel your appointment, please do so at least 24 hours in advance.</p>
+              
+              <div class="preparation">
+                  <h3 style="color: #333; margin-top: 0;">Preparing for Your Video Consultation:</h3>
+                  <ul>
+                      <li>Ensure you have a stable internet connection</li>
+                      <li>Find a quiet, well-lit private space</li>
+                      <li>Test your camera and microphone before the call</li>
+                      <li>Have a list of your symptoms or questions ready</li>
+                      <li>Keep any relevant medical records handy</li>
+                  </ul>
+              </div>
+          </div>
+          <div class="footer">
+              <p>Thank you for choosing PhysioCare for your healthcare needs.</p>
+              <p>&copy; {currentYear} PhysioCare. All rights reserved.</p>
+          </div>
+      </div>
+  </body>
+  </html>
+`;

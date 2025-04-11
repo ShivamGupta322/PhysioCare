@@ -7,7 +7,7 @@ import doctorModel from '../models/doctorModel.js'
 import appointmentModel from '../models/appointmentModel.js'
 import razorpay from 'razorpay'
 import { generateTokenAndSetCookies } from "../middlewares/GenerateToken.js"
-import { sendVerificationEamil, senWelcomeEmail } from "../middlewares/Email.js"
+import { sendVerificationEamil, senWelcomeEmail, sendAppointmentConfirmationEmail } from "../middlewares/Email.js"
 
 
 
@@ -233,7 +233,6 @@ const bookAppointment = async(req,res)=>{
             slots_booked[slotDate].push(slotTime)
         }
         
-
         const userData = await userModel.findById(userId).select('-password')
 
         delete docData.slots_booked
@@ -249,12 +248,23 @@ const bookAppointment = async(req,res)=>{
             date: Date.now()
         }
         
-
         const newAppointment = new appointmentModel(appointmentData)
         await newAppointment.save()
 
         //save new slots data in docData
         await doctorModel.findByIdAndUpdate(docId,{slots_booked})
+        
+        // Send confirmation email to the user
+        if (userData.email) {
+            await sendAppointmentConfirmationEmail(
+                userData.email,
+                userData.name,
+                docData.name,
+                slotDate,
+                slotTime,
+                userId,
+            );
+        }
         
         res.json({success:true,message:'Appointment Booked Successfully'})
         
