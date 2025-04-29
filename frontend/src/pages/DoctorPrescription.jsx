@@ -16,11 +16,9 @@ import {
   Download
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
-// import html2canvas from 'html2canvas/dist/html2canvas.js';
-// import * as html2canvas from "html2canvas";
-
 import jsPDF from 'jspdf';
 import { assets } from '../assets/assets';
+import Review from '../components/Review';
 
 
 
@@ -270,6 +268,38 @@ function DoctorPrescription() {
     }
   };
 
+  // Handle review submission
+  const handleSubmitReview = async () => {
+    if (rating === 0) return;
+    
+    setSubmitting(true);
+    try {
+      // You can implement the actual API call here
+      // Example:
+      // await axios.post(`${backendUrl}/api/reviews`, {
+      //   appointmentId: id,
+      //   doctorId: appointmentData.docData._id,
+      //   rating,
+      //   review: reviewText,
+      // }, {
+      //   headers: { token }
+      // });
+      
+      // For now, just simulate an API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setReviewSubmitted(true);
+      // Reset form
+      setRating(0);
+      setReviewText('');
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      // You could add error handling here
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -506,13 +536,6 @@ function DoctorPrescription() {
 
         {/* Action Buttons */}
         <div className="mt-8 text-center space-x-4">
-          {/* <button 
-            className="px-8 py-3 rounded-full font-medium hover:opacity-90 transition-colors inline-flex items-center gap-2 text-white"
-            style={{ backgroundColor: '#5F6FFF' }}
-          >
-            <Calendar className="w-5 h-5" />
-            Schedule Next Session
-          </button> */}
           <button 
             onClick={handleDownloadPDF}
             className="px-8 py-3 rounded-full font-medium hover:opacity-90 transition-colors inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -521,21 +544,20 @@ function DoctorPrescription() {
             Download PDF
           </button>
         </div>
+        
+        // Remove the handleSubmitReview function since it's now handled in the Review component
+        
+        // In the return statement, update the Review component usage:
+        {/* Review Component */}
+        <div className="mt-12">
+          <Review 
+            doctorId={appointmentData.docData._id}
+            appointmentId={appointmentData._id}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 export default DoctorPrescription;
-
-
-
-// import React from 'react'
-
-// const DoctorPrescription = () => {
-//   return (
-//     <div>DoctorPrescription</div>
-//   )
-// }
-
-// export default DoctorPrescription

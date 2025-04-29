@@ -4,12 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 import RelatedDoctors from '../components/RelatedDoctors'
+import Review from '../components/Review'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 
 const Appointments = () => {
   const {docId}=useParams()
-  const {doctors,currencySymbol,backendUrl,token,getDoctorsData}=useContext(AppContext)
+  const {doctors, currencySymbol, backendUrl, token, getDoctorsData, userData} = useContext(AppContext)
   const daysofWeek =['SUN','MON','TUE','WED','THU','FRI','SAT']
 
   const navigate= useNavigate()
@@ -18,11 +19,47 @@ const Appointments = () => {
   const [docSlots, setDocSlots] = useState([])
   const [slotIndes, setSlotIndes] = useState(0)
   const [slotTime, setSlotTime] = useState('')
+  const [showReviewForm, setShowReviewForm] = useState(false)
 
-  const fetchDocInfo = async()=>{
-    const docInfo=doctors.find(doc=>doc._id===docId)
-    setDocInfo(docInfo)
-  }
+  const fetchDocInfo = async() => {
+      const docInfo = doctors.find(doc => doc._id === docId)
+      
+      // Fetch reviews for this doctor
+      try {
+        const { data } = await axios.get(`${backendUrl}/api/reviews/doctor/${docId}`)
+        if (data.success) {
+          // Add reviews to doctor info with proper user names
+          const reviewsWithUserNames = data.reviews.map(review => {
+            // If the review already has a userName, use it
+            // Otherwise, try to use the user's name from the review's userId if it matches the current user
+            if (!review.userName && review.userId === userData?._id) {
+              return {
+                ...review,
+                userName: userData.name || "Anonymous User"
+              };
+            }
+            return review;
+          });
+          
+          setDocInfo({
+            ...docInfo,
+            reviews: reviewsWithUserNames
+          });
+        } else {
+          setDocInfo({
+            ...docInfo,
+            reviews: []
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching doctor reviews:", error);
+        setDocInfo({
+          ...docInfo,
+          reviews: []
+        });
+      }
+    }
+  
 
   const getAvailableSlots = async()=>{
     setDocSlots([])
@@ -183,6 +220,61 @@ getAvailableSlots()
             ))}
           </div>
           <button onClick={bookAppointment} className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6'>Book an Appointment</button>
+      </div>
+
+      {/* Doctor Reviews Section */}
+      <div className="mt-8 mb-10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-medium text-gray-800">
+            Patient Reviews 
+            {docInfo.reviews && (
+              <span className="ml-2 text-sm bg-gray-100 text-gray-700 py-1 px-2 rounded-full">
+                {docInfo.reviews.length} {docInfo.reviews.length === 1 ? 'review' : 'reviews'}
+              </span>
+            )}
+          </h2>
+        </div>
+        
+        <div className="mb-6 bg-blue-50 p-4 rounded-lg text-sm text-blue-700">
+          <p>
+            <strong>Note:</strong> To maintain authenticity, you can only write a review after completing an appointment with this doctor. 
+            Please visit the "My Appointments" page to leave your feedback for completed appointments.
+          </p>
+        </div>
+        
+        <div className="reviews-container">
+          {docInfo.reviews && docInfo.reviews.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {docInfo.reviews.map((review, index) => (
+                <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                        {review.userName ? review.userName.charAt(0) : "U"}
+                      </div>
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-800">{review.userName || "Anonymous User"}</p>
+                        <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={`text-lg ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  {review.reviewText && (
+                    <p className="text-gray-600 text-sm mt-2">{review.reviewText}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 p-6 rounded-lg text-center">
+              <p className="text-gray-500">No reviews yet. This doctor hasn't received any reviews from patients.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/*----listing related doctors */}

@@ -6,6 +6,7 @@ import connectCloudinary from './config/cloudnary.js';
 import adminRouter from './routes/adminRoutes.js';
 import doctorRouter from './routes/doctorRoutes.js';
 import userRouter from './routes/userRoute.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 import cookieParser from "cookie-parser"
 
 
@@ -34,6 +35,7 @@ app.use('/api/admin',adminRouter)
 //localhost:4000/api/admin/add-doctor
 app.use('/api/doctor',doctorRouter)
 app.use('/api/user',userRouter)
+app.use('/api/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
   res.send('API Working');
