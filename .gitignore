@@ -1,9 +1,0 @@
-backend/.env 
-admin/.env
-frontend/.env
-# Exercise video folder
-exercise_video/
-node_modules/
-
-# Virtual environment
-venv/
