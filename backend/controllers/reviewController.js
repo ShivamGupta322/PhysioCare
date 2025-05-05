@@ -61,9 +61,16 @@ const submitReview = async (req, res) => {
 const getDoctorReviews = async (req, res) => {
   try {
     const { doctorId } = req.params;
-
+    
+    console.log("Fetching reviews for doctor:", doctorId);
+    
+    // Count total reviews for this doctor
+    const totalReviews = await reviewModel.countDocuments({ doctorId });
+    console.log("Total reviews found in database:", totalReviews);
+    
     const reviews = await reviewModel.find({ doctorId }).sort({ createdAt: -1 });
-
+    console.log("Reviews returned:", reviews.length);
+    
     res.json({ success: true, reviews });
   } catch (error) {
     console.log(error);
@@ -104,4 +111,25 @@ const updateDoctorRating = async (doctorId) => {
   }
 };
 
-export { submitReview, getDoctorReviews, getUserReviews };
+// Get reviews for a specific appointment
+const getReviewsByAppointment = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const { userId } = req.body;
+
+    if (!appointmentId) {
+      return res.json({ success: false, message: "Appointment ID is required" });
+    }
+
+    // Find reviews for this specific appointment
+    const reviews = await reviewModel.find({ appointmentId, userId });
+
+    res.json({ success: true, reviews });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Update the export statement to include the new function
+export { submitReview, getDoctorReviews, getUserReviews, getReviewsByAppointment };

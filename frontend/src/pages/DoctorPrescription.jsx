@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useContext } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { 
   Clock, 
   Phone, 
@@ -224,8 +225,8 @@ function DoctorPrescription() {
           return;
         }
         
-        // Otherwise fetch from API
-        const { data } = await axios.get(`${backendUrl}/api/user/appointment/${id}`, {
+        // Otherwise fetch from API - Fix the endpoint path
+        const { data } = await axios.get(`${backendUrl}/api/appointment/${id}`, {
           headers: { token }
         });
         
@@ -545,17 +546,310 @@ function DoctorPrescription() {
           </button>
         </div>
         
-        // Remove the handleSubmitReview function since it's now handled in the Review component
-        
-        // In the return statement, update the Review component usage:
-        {/* Review Component */}
+        {/* Review Component - Only show if appointment date has passed */}
         <div className="mt-12">
-          <Review 
-            doctorId={appointmentData.docData._id}
-            appointmentId={appointmentData._id}
-          />
+          {isAppointmentPassed(appointmentData.slotDate, appointmentData.slotTime) ? (
+            <>
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Rate Your Experience</h3>
+                <Review 
+                  doctorId={appointmentData.docData._id}
+                  appointmentId={appointmentData._id}
+                />
+              </div>
+              
+              {/* User's Previous Reviews Section */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Your Reviews</h3>
+                <UserReviews 
+                  doctorId={appointmentData.docData._id} 
+                  appointmentId={appointmentData._id}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="bg-blue-50 p-6 rounded-lg text-center">
+              <h3 className="text-lg font-medium text-gray-800 mb-2">Review Not Available Yet</h3>
+              <p className="text-gray-600">
+                You can only rate and review this appointment after it has been completed on {formattedAppointmentDate} at {appointmentData.slotTime}.
+              </p>
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Helper function to check if appointment date has passed
+function isAppointmentPassed(slotDate, slotTime) {
+  if (!slotDate || !slotTime) return false;
+  
+  // Parse the date from slotDate (format: day_month_year)
+  const [day, month, year] = slotDate.split('_').map(num => parseInt(num, 10));
+  
+  // Parse the time from slotTime (format: HH:MM AM/PM)
+  let [time, period] = slotTime.split(' ');
+  let [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
+  
+  // Convert to 24-hour format
+  if (period === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  
+  // Create appointment date object (month is 0-indexed in JavaScript Date)
+  const appointmentDate = new Date(year, month - 1, day, hours, minutes);
+  const currentDate = new Date();
+  
+  // Return true if appointment date has passed
+  return appointmentDate < currentDate;
+}
+
+// UserReviews component to display, edit and delete user's reviews
+function UserReviews({ doctorId, appointmentId }) {
+  const { backendUrl, token, getUserReviewsByAppointment } = useContext(AppContext);
+  const [userReviews, setUserReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingReview, setEditingReview] = useState(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editReviewText, setEditReviewText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch user's reviews for this specific doctor and appointment
+  // Update the useEffect in UserReviews component
+  useEffect(() => {
+    const fetchUserReviews = async () => {
+      if (!appointmentId) return;
+      
+      try {
+        setLoading(true);
+        
+        if (getUserReviewsByAppointment) {
+          // Use the context function if available
+          const reviews = await getUserReviewsByAppointment(appointmentId);
+          setUserReviews(reviews || []);
+        } else {
+          // Fallback: Direct API call
+          const { data } = await axios.get(`${backendUrl}/api/reviews/user`, {
+            headers: { token }
+          });
+          
+          if (data.success) {
+            // Filter reviews for this specific appointment
+            const filteredReviews = data.reviews.filter(review => 
+              review.appointmentId === appointmentId
+            );
+            setUserReviews(filteredReviews || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user reviews:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchUserReviews();
+  }, [backendUrl, token, appointmentId, getUserReviewsByAppointment]);
+  
+  // Add the missing handleEditClick function if it's not already defined
+  const handleEditClick = (review) => {
+    setEditingReview(review);
+    setEditRating(review.rating);
+    setEditReviewText(review.review || '');
+    setIsEditing(true);
+  };
+
+  // Save edited review
+  const handleSaveEdit = async () => {
+    if (!editingReview) return;
+    
+    try {
+      setIsEditing(true);
+      const { data } = await axios.put(
+        `${backendUrl}/api/reviews/${editingReview._id}`,
+        {
+          rating: editRating,
+          review: editReviewText,
+          doctorId,
+          appointmentId
+        },
+        { headers: { token } }
+      );
+      
+      if (data.success) {
+        // Update the reviews list with the updated review data
+        setUserReviews(prevReviews => 
+          prevReviews.map(rev => 
+            rev._id === editingReview._id 
+              ? { ...rev, rating: editRating, review: editReviewText, updatedAt: new Date().toISOString() } 
+              : rev
+          )
+        );
+        
+        // Reset editing state
+        setEditingReview(null);
+        toast.success('Review updated successfully');
+      } else {
+        toast.error(data.message || 'Failed to update review');
+      }
+    } catch (error) {
+      console.error('Error updating review:', error);
+      toast.error('Failed to update review. Please try again.');
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  // Cancel editing - Make sure this function is properly defined
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingReview(null);
+  };
+
+  // Delete a review
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    
+    try {
+      setIsDeleting(true);
+      const { data } = await axios.delete(
+        `${backendUrl}/api/reviews/${reviewId}`,
+        { 
+          headers: { token },
+          data: { doctorId, appointmentId }
+        }
+      );
+      
+      if (data.success) {
+        // Remove the deleted review from the list
+        setUserReviews(prevReviews => prevReviews.filter(rev => rev._id !== reviewId));
+        toast.success('Review deleted successfully');
+      } else {
+        toast.error(data.message || 'Failed to delete review');
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast.error('Failed to delete review. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-2 text-gray-600">Loading your reviews...</p>
+      </div>
+    );
+  }
+
+  if (userReviews.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-600">
+        <p>You haven't submitted any reviews for this appointment yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {userReviews.map(review => (
+        <div key={review._id} className="border rounded-lg p-4 bg-gray-50">
+          {editingReview && editingReview._id === review._id ? (
+            // Edit mode
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setEditRating(star)}
+                      className="text-2xl focus:outline-none text-yellow-400"
+                    >
+                      {star <= editRating ? '★' : '☆'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Review</label>
+                <textarea
+                  value={editReviewText}
+                  onChange={(e) => setEditReviewText(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  rows="3"
+                  placeholder="Share your experience with this appointment..."
+                ></textarea>
+              </div>
+              
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                  disabled={isEditing}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-700"
+                  disabled={isEditing}
+                >
+                  {isEditing ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            // View mode
+            <>
+              <div className="flex justify-between items-start">
+                <div className="w-full">
+                  <div className="flex items-center mb-2 justify-between">
+                    <div className="flex items-center">
+                      <div className="text-yellow-400 text-xl">
+                        {Array(5).fill(0).map((_, i) => (
+                          <span key={i}>{i < review.rating ? '★' : '☆'}</span>
+                        ))}
+                      </div>
+                      <span className="ml-2 text-sm text-gray-500">
+                        {new Date(review.createdAt || review.updatedAt || Date.now()).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditClick(review)}
+                        className="p-1 text-blue-600 hover:text-blue-800"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteReview(review._id)}
+                        className="p-1 text-red-600 hover:text-red-800"
+                        disabled={isDeleting}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mt-2">{review.review || "No written review provided."}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

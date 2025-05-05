@@ -26,7 +26,9 @@ const Appointments = () => {
       
       // Fetch reviews for this doctor
       try {
+        // Fix the URL by adding the missing /api/ prefix
         const { data } = await axios.get(`${backendUrl}/api/reviews/doctor/${docId}`)
+        console.log("Reviews data:", data); // Add this to debug
         if (data.success) {
           // Add reviews to doctor info with proper user names
           const reviewsWithUserNames = data.reviews.map(review => {
@@ -40,6 +42,8 @@ const Appointments = () => {
             }
             return review;
           });
+          
+          console.log("Reviews with user names:", reviewsWithUserNames); // Add this to debug
           
           setDocInfo({
             ...docInfo,
@@ -138,7 +142,7 @@ const Appointments = () => {
 
       const slotDate = day + "_" + month + "_" + year
       
-      const {data} = await axios.post(backendUrl + '/api/user/book-appointment',{docId,slotDate,slotTime},{headers:{token}})
+      const {data} = await axios.post(backendUrl + '/user/book-appointment',{docId,slotDate,slotTime},{headers:{token}})
 
       if(data.success){
         toast.success(data.message)
