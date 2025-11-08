@@ -1,9 +1,34 @@
-backend/.env 
-admin/.env
-frontend/.env
-# Exercise video folder
-exercise_video/
-node_modules/
+# backend/.env 
+# admin/.env
+# frontend/.env
+# # Exercise video folder
+# exercise_video/
+# node_modules/
 
-# Virtual environment
+# # Virtual environment
+# venv/
+
+
+
+# --- Node / Vite ---
+node_modules/
+dist/
+build/
+*.log
+
+# --- React / Vite envs ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
 venv/
+.env/            # python envs sometimes named like this
+__pycache__/
+*.pyc
+
+# --- OS / Editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
