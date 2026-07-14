@@ -1,12 +1,12 @@
-# backend/.env 
-# admin/.env
-# frontend/.env
-# # Exercise video folder
+backend/.env 
+admin/.env
+frontend/.env
+# Exercise video folder
 # exercise_video/
 # node_modules/
 
-# # Virtual environment
-# venv/
+# Virtual environment
+venv/
 
 
 
@@ -26,6 +26,7 @@ venv/
 .env/            # python envs sometimes named like this
 __pycache__/
 *.pyc
+exercise_video/
 
 # --- OS / Editors ---
 .DS_Store
